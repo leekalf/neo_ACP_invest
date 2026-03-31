@@ -1,0 +1,54 @@
+services:
+
+  db:
+    image: postgres:15
+    container_name: acp_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: acp-invest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - acp_network
+
+  backend:
+    build: ./backend
+    container_name: acp_backend
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/acp-invest
+    ports:
+      - "8000:8000"
+    networks:
+      - acp_network
+    volumes:
+      - acp_uploads:/app/uploaded_files
+
+  frontend:
+    build: ./frontend
+    container_name: acp_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - acp_network
+    # Permet le rechargement à chaud (Hot Reload) lors du développement
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  acp_uploads:
+
+networks:
+  acp_network:
+    driver: bridge

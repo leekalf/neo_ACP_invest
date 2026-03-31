@@ -1,0 +1,44 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/acp-invest
+    # La modification clé est ici :
+    # Le backend ne démarrera que lorsque le 'healthcheck' du service 'db' sera passé.
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    # Expose le port 5433 sur l'hôte pour éviter le conflit avec un Postgres local sur 5432
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=acp-invest
+    # On ajoute un 'healthcheck' pour vérifier que la base de données est prête.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d acp-invest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
