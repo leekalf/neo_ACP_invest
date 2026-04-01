@@ -26,7 +26,10 @@ import ListAltIcon from '@mui/icons-material/ListAlt'; // Nouvelle icône pour l
 import { Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 // Configuration de l'URL de l'API (Locale par défaut, ou URL Render)
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+let API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+if (API_URL && !API_URL.startsWith('http')) {
+  API_URL = `https://${API_URL}`;
+}
 
 // --- CONFIGURATION DYNAMIQUE DES ANNÉES ---
 const CURRENT_YEAR = new Date().getFullYear();

@@ -64,10 +64,14 @@ app = FastAPI(
 # --- CONFIGURATION CORS ---
 # Configuration permissive pour le développement local.
 
+frontend_url = os.getenv("FRONTEND_URL", "")
+if frontend_url and not frontend_url.startswith("http"):
+    frontend_url = f"https://{frontend_url}"
+
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    os.getenv("FRONTEND_URL", ""), # URL de Render
+    frontend_url,
 ]
 
 app.add_middleware(
