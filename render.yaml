@@ -18,7 +18,7 @@ services:
           property: connectionString
       - key: FRONTEND_URL
         fromService:
-          type: static
+          type: web
           name: acp-frontend
           property: url
       - key: PYTHON_VERSION
@@ -27,7 +27,7 @@ services:
         generateValue: true
 
   # 3. Le Frontend React (Vite)
-  - type: static
+  - type: web
     name: acp-frontend
     env: static
     buildCommand: cd frontend && npm install && npm run build
