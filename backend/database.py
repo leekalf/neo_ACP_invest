@@ -5,7 +5,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # URL de connexion construite à partir des variables d'environnement ou par défaut pour Docker
 # Par défaut, on pointe sur localhost pour faciliter les scripts locaux (seed.py).
 # Docker écrase cette valeur via la variable d'environnement définie dans docker-compose.yml
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Sur Vercel, la variable par défaut pour Vercel Postgres est souvent POSTGRES_URL.
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 if not DATABASE_URL:

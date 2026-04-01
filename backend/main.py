@@ -65,20 +65,25 @@ app = FastAPI(
 # --- CONFIGURATION CORS ---
 # Configuration permissive pour le développement local.
 
-frontend_url = os.getenv("FRONTEND_URL", "")
-if frontend_url and not frontend_url.startswith("http"):
-    frontend_url = f"https://{frontend_url}"
-
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    frontend_url,
 ]
+
+# Ajouter l'URL de production si définie
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url if frontend_url.startswith("http") else f"https://{frontend_url}")
+
+# Autoriser dynamiquement les domaines Vercel (preview et production)
+vercel_url = os.getenv("VERCEL_URL")
+if vercel_url:
+    allowed_origins.append(f"https://{vercel_url}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin for origin in allowed_origins if origin],
-    allow_origin_regex=os.getenv("CORS_REGEX", "https?://(localhost|127\.0\.0\.1)(:\d+)?"),
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https?://.*\.vercel\.app", # Autorise tous les sous-domaines Vercel
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
