@@ -2,11 +2,10 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
-passlib
-bcrypt==3.2.2
 python-jose[cryptography]
-pydantic[email]
-pandas
-openpyxl
-xlsxwriter
+passlib[bcrypt]
 python-multipart
+pandas
+xlsxwriter
+openpyxl
+jinja2

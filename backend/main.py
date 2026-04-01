@@ -55,6 +55,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     yield
 
 app = FastAPI(
+    root_path="/api",
     title="Système de Gestion des Investisseurs ACP",
     description="API pour le suivi stratégique des investissements",
     version="1.0.0",
