@@ -1,6 +1,6 @@
 services:
   # 1. La Base de données PostgreSQL
-  - type: database
+  - type: pserv
     name: acp-db
     databaseName: acp_invest
     user: postgres
