@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from passlib.context import CryptContext
@@ -11,7 +12,7 @@ from database import get_db
 
 # --- Configuration ---
 # IMPORTANT: Ces valeurs devraient être dans un fichier de configuration ou des variables d'environnement
-SECRET_KEY = "a_very_secret_key_that_should_be_changed_for_production"
+SECRET_KEY = os.getenv("SECRET_KEY", "a_very_secret_key_that_should_be_changed_for_production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
