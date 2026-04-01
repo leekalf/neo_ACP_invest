@@ -8,4 +8,5 @@ python-jose[cryptography]
 pydantic[email]
 pandas
 openpyxl
+xlsxwriter
 python-multipart

@@ -247,7 +247,17 @@ def get_dashboard_stats(db: Session, year: Optional[int] = None):
     
     # Si pas encore de données historiques, on garde un fallback vide pour éviter le crash
     if not trends:
-        trends = [{"month": datetime.now().strftime("%b"), "investment": 0, "sales": 0, "jobs": 0}]
+        trends = [{
+            "month": datetime.now().strftime("%b"), 
+            "investment": 0, 
+            "sales": 0, 
+            "jobs": 0,
+            "men": 0,
+            "women": 0,
+            "national": 0,
+            "expat": 0
+        }]
+
 
     return {
         "total_projects": total_projects,

@@ -14,6 +14,12 @@ import io
 from database import engine, Base, get_db, SessionLocal
 import models, schemas, crud, security
 
+app = FastAPI(
+    title="Système de Gestion des Investisseurs ACP",
+    description="API pour le suivi stratégique des investissements",
+    version="1.0.0"
+)
+
 # Création des tables dans la base de données (pour le développement)
 models.Base.metadata.create_all(bind=engine)
 
@@ -45,23 +51,24 @@ def init_db():
     finally:
         db.close()
 
-# Lancer l'initialisation au démarrage
-init_db()
-
-app = FastAPI(
-    title="Système de Gestion des Investisseurs ACP",
-    description="API pour le suivi stratégique des investissements",
-    version="1.0.0"
-)
+@app.on_event("startup")
+def startup_event():
+    """Lancer l'initialisation au démarrage de l'application."""
+    init_db()
 
 # --- CONFIGURATION CORS ---
 # Configuration permissive pour le développement local.
-# Cela autorise http://localhost et http://127.0.0.1 sur N'IMPORTE QUEL PORT.
+
+allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    os.getenv("FRONTEND_URL", ""), # URL de Render
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    # Regex pour autoriser localhost ou 127.0.0.1 suivi de n'importe quel port
-    allow_origin_regex="https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origins=[origin for origin in allowed_origins if origin],
+    allow_origin_regex=os.getenv("CORS_REGEX", "https?://(localhost|127\.0\.0\.1)(:\d+)?"),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -253,6 +260,9 @@ def export_projects_to_excel(db: Session = Depends(get_db), current_user: models
     """
     Exporte la liste complète des projets vers un fichier Excel.
     """
+    if pd is None:
+        raise HTTPException(status_code=500, detail="Pandas non configuré sur le serveur")
+    
     projects = crud.get_projects(db, limit=2000) # Exporter jusqu'à 2000 projets
 
     # Préparer les données pour l'export
@@ -280,7 +290,13 @@ def export_projects_to_excel(db: Session = Depends(get_db), current_user: models
     # Créer un fichier Excel en mémoire
     output = io.BytesIO()
     
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+    try:
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    except ValueError:
+        # Fallback si xlsxwriter n'est pas trouvé mais openpyxl l'est
+        writer = pd.ExcelWriter(output, engine='openpyxl')
+
+    with writer:
         df.to_excel(writer, index=False, sheet_name='Projets Détaillés')
         workbook = writer.book
         worksheet = writer.sheets['Projets Détaillés']
@@ -311,7 +327,7 @@ def export_projects_to_excel(db: Session = Depends(get_db), current_user: models
     headers = {'Content-Disposition': 'attachment; filename="export_projets_acp.xlsx"'}
     return StreamingResponse(output, headers=headers, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-@app.get("/export/dashboard/stats/excel", tags=["Dashboard & Reporting"])
+@app.get("/export/stats/dashboard/excel", tags=["Dashboard & Reporting"])
 def export_dashboard_stats_to_excel(year: Optional[int] = None, db: Session = Depends(get_db), current_user: models.User = Depends(security.get_current_user)):
     """
     Exporte les statistiques globales du tableau de bord vers un fichier Excel.

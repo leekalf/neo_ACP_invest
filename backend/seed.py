@@ -52,6 +52,17 @@ def seed_data():
         # Commentez la ligne suivante si vous ne voulez pas vider la base à chaque fois
         clear_data(db)
 
+        # Créer l'administrateur par défaut pour ne pas perdre l'accès après le reset
+        admin_email = "admin@acp.tg"
+        if not crud.get_user_by_email(db, admin_email):
+            logger.info(f"Création de l'admin par défaut: {admin_email}")
+            crud.create_user(db, schemas.UserCreate(
+                email=admin_email,
+                password="admin123",
+                full_name="Administrateur Système",
+                role=models.UserRole.ADMIN
+            ))
+
         logger.info("--- DEBUT DU PEUPLEMENT DE LA BASE DE DONNEES ---")
 
         # Liste de 10 entreprises avec des données variées pour les tests
@@ -222,17 +233,21 @@ def seed_data():
 
                 # 4. Génération d'Historique Mensuel (sur 2024 et 2025)
                 if proj_data["status"] == "en activités":
-                    # Générer 18 mois de données (toute l'année 2024 + moitié 2025)
+                    # Générer 18 mois de données se terminant à la date actuelle (ex: 2026)
+                    now = datetime.now()
                     for i in range(18, -1, -1):
-                        date_point = datetime(2025, 6, 1) - timedelta(days=i*30)
+                        date_point = now - timedelta(days=i*30)
                         
-                        # On introduit une progression de base avec du bruit aléatoire (fluctuations)
+                        # Progression de base (0 à 100%)
                         progress = (20 - i) / 20 
                         
-                        # Chiffre d'affaires : Très volatile (les "montées et descentes" demandées)
-                        sales_volatility = random.uniform(0.3, 1.7) 
+                        # --- RÉALISME ACCRU ---
+                        # Chiffre d'affaires : Très volatile + creux saisonnier aléatoire
+                        seasonal_factor = 1.0 + (0.5 * random.uniform(-1, 1))
+                        sales_volatility = random.uniform(0.5, 1.5) * seasonal_factor
+                        
                         # Emplois : Fluctuations modérées (simule recrutements et départs)
-                        jobs_volatility = random.uniform(0.85, 1.1)
+                        jobs_volatility = random.uniform(0.9, 1.1)
                         # Investissement : Reste cumulatif mais avec des paliers irréguliers
                         inv_volatility = random.uniform(0.95, 1.05)
 

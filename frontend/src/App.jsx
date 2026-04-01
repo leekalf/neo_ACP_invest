@@ -25,6 +25,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import ListAltIcon from '@mui/icons-material/ListAlt'; // Nouvelle icône pour les courriers
 import { Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
+// Configuration de l'URL de l'API (Locale par défaut, ou URL Render)
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 // --- CONFIGURATION DYNAMIQUE DES ANNÉES ---
 const CURRENT_YEAR = new Date().getFullYear();
 const START_YEAR = 2024; // L'année de lancement du système
@@ -90,7 +93,7 @@ function LoginDialog({ open, onClose, onLogin }) {
       formData.append('username', email); // OAuth2 utilise 'username' même pour un email
       formData.append('password', password);
 
-      const response = await axios.post('http://127.0.0.1:8000/token', formData, {
+      const response = await axios.post(`${API_URL}/token`, formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       
@@ -241,7 +244,7 @@ Remarques: ${formData.remarks}
 
       if (initialData) {
         // --- MODE MODIFICATION ---
-        await axios.patch(`http://127.0.0.1:8000/projects/${initialData.id}`, {
+        await axios.patch(`${API_URL}/projects/${initialData.id}`, {
           status: formData.status,
           description: fullDescription,
           investment_projected: parseFloat(formData.investment_projected) || 0,
@@ -249,7 +252,7 @@ Remarques: ${formData.remarks}
           land_area: parseFloat(formData.land_area) || 0,
         }, config);
 
-        await axios.post(`http://127.0.0.1:8000/projects/${initialData.id}/employment/`, {
+        await axios.post(`${API_URL}/projects/${initialData.id}/employment/`, {
           jobs_created_total: parseInt(formData.jobs_created) || 0,
           jobs_expat: parseInt(formData.jobs_expat) || 0,
           jobs_national: parseInt(formData.jobs_national) || 0,
@@ -259,14 +262,14 @@ Remarques: ${formData.remarks}
 
       } else {
         // --- MODE CRÉATION ---
-        const invRes = await axios.post('http://127.0.0.1:8000/investors/', {
+        const invRes = await axios.post(`${API_URL}/investors/`, {
           name: formData.investor_name,
           country: formData.investor_origin,
           sector: formData.investor_sector
         }, config);
         const investorId = invRes.data.id;
 
-        const projRes = await axios.post('http://127.0.0.1:8000/projects/', {
+        const projRes = await axios.post(`${API_URL}/projects/`, {
           name: formData.social_object,
           investor_id: investorId,
           investment_projected: parseFloat(formData.investment_projected) || 0,
@@ -277,7 +280,7 @@ Remarques: ${formData.remarks}
         }, config);
         const projectId = projRes.data.id;
 
-        await axios.post(`http://127.0.0.1:8000/projects/${projectId}/employment/`, {
+        await axios.post(`${API_URL}/projects/${projectId}/employment/`, {
           jobs_created_total: parseInt(formData.jobs_created) || 0,
           jobs_expat: parseInt(formData.jobs_expat) || 0,
           jobs_national: parseInt(formData.jobs_national) || 0,
@@ -678,8 +681,8 @@ function DetailPage() {
                 return;
             }
             try {
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                const response = await axios.get('http://127.0.0.1:8000/projects/', config);
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const response = await axios.get(`${API_URL}/projects/`, config);
                 setProjects(response.data);
             } catch (err) {
                 setError('Impossible de charger les données.');
@@ -772,7 +775,7 @@ function AuditLogPage() {
             }
             try {
                 const config = { headers: { Authorization: `Bearer ${token}` } };
-                const response = await axios.get('http://127.0.0.1:8000/audit-logs/', config);
+                const response = await axios.get(`${API_URL}/audit-logs/`, config);
                 setLogs(response.data);
             } catch (err) {
                 setError('Impossible de charger les journaux d\'audit. Seuls les administrateurs y ont accès.');
@@ -837,7 +840,7 @@ function UserManagementPage() {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const response = await axios.get('http://127.0.0.1:8000/users/', config);
+            const response = await axios.get(`${API_URL}/users/`, config);
             setUsers(response.data);
         } catch (err) {
             setError('Impossible de charger la liste des utilisateurs. Seuls les administrateurs y ont accès.');
@@ -864,7 +867,7 @@ function UserManagementPage() {
         if (!window.confirm(`Voulez-vous vraiment ${user.is_active ? 'désactiver' : 'réactiver'} cet utilisateur ?`)) return;
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.patch(`http://127.0.0.1:8000/users/${user.id}`, { is_active: !user.is_active }, config);
+            await axios.patch(`${API_URL}/users/${user.id}`, { is_active: !user.is_active }, config);
             fetchUsers();
         } catch (err) {
             alert("Erreur lors de la mise à jour du statut.");
@@ -963,10 +966,10 @@ function UserFormDialog({ open, onClose, onSuccess, token, initialData }) {
             if (password) payload.password = password;
 
             if (initialData) {
-                await axios.patch(`http://127.0.0.1:8000/users/${initialData.id}`, payload, config);
+                await axios.patch(`${API_URL}/users/${initialData.id}`, payload, config);
             } else {
                 if (!password) { setError("Le mot de passe est requis pour la création."); return; }
-                await axios.post('http://127.0.0.1:8000/users/', { ...payload, password }, config);
+                await axios.post(`${API_URL}/users/`, { ...payload, password }, config);
             }
             onSuccess();
         } catch (err) {
@@ -1018,8 +1021,8 @@ function ProjectDetailPage() {
             try {
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const [projRes, trendRes] = await Promise.all([
-                    axios.get(`http://127.0.0.1:8000/projects/${projectId}`, config),
-                    axios.get(`http://127.0.0.1:8000/projects/${projectId}/stats?year=${selectedYear}`, config)
+                    axios.get(`${API_URL}/projects/${projectId}`, config),
+                    axios.get(`${API_URL}/projects/${projectId}/stats?year=${selectedYear}`, config)
                 ]);
                 setProject(projRes.data);
                 setTrends(trendRes.data);
@@ -1194,7 +1197,7 @@ function RequestFormDialog({ open, onClose, onSuccess, token, projects }) {
         setError(null);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.post('http://127.0.0.1:8000/requests/', formData, config);
+            await axios.post(`${API_URL}/requests/`, formData, config);
             onSuccess();
             onClose();
         } catch (err) {
@@ -1275,7 +1278,7 @@ function RequestManagementPage({ currentUser }) {
         setError(null);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            let url = 'http://127.0.0.1:8000/requests/';
+            let url = `${API_URL}/requests/`;
             const params = new URLSearchParams();
             if (filterStatus !== 'all') {
                 params.append('status', filterStatus);
@@ -1300,7 +1303,7 @@ function RequestManagementPage({ currentUser }) {
         if (!token) return;
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const response = await axios.get('http://127.0.0.1:8000/projects/', config);
+            const response = await axios.get(`${API_URL}/projects/`, config);
             setProjects(response.data);
         } catch (err) {
             console.error("Erreur lors du chargement des projets pour le filtre:", err);
@@ -1319,7 +1322,7 @@ function RequestManagementPage({ currentUser }) {
         if (!window.confirm(`Voulez-vous vraiment changer le statut de cette demande à "${newStatus.replace('_', ' ')}" ?`)) return;
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.patch(`http://127.0.0.1:8000/requests/${requestId}/status`, null, {
+            await axios.patch(`${API_URL}/requests/${requestId}/status`, null, {
                 params: { new_status: newStatus },
                 ...config
             });
@@ -1479,7 +1482,7 @@ function App() {
 
   const fetchStats = async (year) => {
     try {
-      const url = year ? `http://127.0.0.1:8000/dashboard/stats?year=${year}` : 'http://127.0.0.1:8000/dashboard/stats';
+      const url = year ? `${API_URL}/dashboard/stats?year=${year}` : `${API_URL}/dashboard/stats`;
       const response = await axios.get(url);
       setStats(response.data);
     } catch (err) {
@@ -1495,7 +1498,7 @@ function App() {
     setProjectsError(null);
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const response = await axios.get('http://127.0.0.1:8000/projects/', config);
+      const response = await axios.get(`${API_URL}/projects/`, config);
       setProjects(response.data);
     } catch (err) {
       setProjectsError('Impossible de charger la liste des projets. (Token expiré ?)');
@@ -1512,7 +1515,7 @@ function App() {
     if (!currentToken) return;
     try {
       const config = { headers: { Authorization: `Bearer ${currentToken}` } };
-      const response = await axios.get('http://127.0.0.1:8000/users/me/', config);
+      const response = await axios.get(`${API_URL}/users/me/`, config);
       setCurrentUser(response.data);
     } catch (error) {
       console.error("Impossible de récupérer l'utilisateur actuel", error);
@@ -1556,7 +1559,7 @@ function App() {
   const handleExportProjectsExcel = async () => {
     handleExportMenuClose();
     try {
-      const response = await axios.get('http://127.0.0.1:8000/export/projects/excel', {
+      const response = await axios.get(`${API_URL}/export/projects/excel`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob', // Important pour recevoir un fichier
       });
@@ -1580,7 +1583,7 @@ function App() {
   const handleExportDashboardStatsExcel = async () => {
     handleExportMenuClose();
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/export/stats/dashboard/excel?year=${selectedYear}`, {
+      const response = await axios.get(`${API_URL}/export/stats/dashboard/excel?year=${selectedYear}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
       });
@@ -1604,7 +1607,7 @@ function App() {
 
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.delete(`http://127.0.0.1:8000/projects/${projectId}`, config);
+      await axios.delete(`${API_URL}/projects/${projectId}`, config);
       fetchProjects(); // Rafraîchir la liste
       fetchStats(selectedYear); // Rafraîchir les stats
     } catch (err) {
@@ -1617,7 +1620,7 @@ function App() {
     handleExportMenuClose();
     // Implémentation similaire à handleExportProjectsExcel, appelant le nouvel endpoint /export/requests/excel
     try {
-      const response = await axios.get('http://127.0.0.1:8000/export/courriers/excel', {
+      const response = await axios.get(`${API_URL}/export/courriers/excel`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
       });
