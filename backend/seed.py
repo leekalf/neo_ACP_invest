@@ -3,6 +3,7 @@ import os
 # SOLUTION WINDOWS : On force la librairie PostgreSQL (libpq) à utiliser l'UTF-8 
 # AVANT même d'importer la base de données. Cela corrige l'erreur "codec can't decode byte 0xe9".
 os.environ["PGCLIENTENCODING"] = "utf8"
+import random
 
 import logging
 from sqlalchemy.orm import Session
@@ -224,17 +225,27 @@ def seed_data():
                     # Générer 18 mois de données (toute l'année 2024 + moitié 2025)
                     for i in range(18, -1, -1):
                         date_point = datetime(2025, 6, 1) - timedelta(days=i*30)
-                        factor = (24 - i) / 24
+                        
+                        # On introduit une progression de base avec du bruit aléatoire (fluctuations)
+                        progress = (20 - i) / 20 
+                        
+                        # Chiffre d'affaires : Très volatile (les "montées et descentes" demandées)
+                        sales_volatility = random.uniform(0.3, 1.7) 
+                        # Emplois : Fluctuations modérées (simule recrutements et départs)
+                        jobs_volatility = random.uniform(0.85, 1.1)
+                        # Investissement : Reste cumulatif mais avec des paliers irréguliers
+                        inv_volatility = random.uniform(0.95, 1.05)
+
                         crud.create_monthly_record(db, {
                             "project_id": project.id,
                             "record_date": date_point,
-                            "investment_realized": project.investment_realized * factor,
-                            "total_sales": (project.investment_realized * 0.1) * factor, 
-                            "jobs_effective": int(employment_schema.jobs_effective * factor),
-                            "jobs_national": int(employment_schema.jobs_national * factor),
+                            "investment_realized": min(project.investment_realized, project.investment_realized * progress * inv_volatility),
+                            "total_sales": (project.investment_realized * 0.05) * sales_volatility, 
+                            "jobs_effective": int(employment_schema.jobs_effective * progress * jobs_volatility),
+                            "jobs_national": int(employment_schema.jobs_national * progress * jobs_volatility),
                             "jobs_expat": employment_schema.jobs_expat,
-                            "jobs_men": int(employment_schema.jobs_men * factor),
-                            "jobs_women": int(employment_schema.jobs_women * factor)
+                            "jobs_men": int(employment_schema.jobs_men * progress * jobs_volatility),
+                            "jobs_women": int(employment_schema.jobs_women * progress * jobs_volatility)
                         })
 
             else:
