@@ -4,24 +4,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session, joinedload
 from fastapi.responses import StreamingResponse
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 from datetime import datetime, timedelta
 import shutil
 import os
 import pandas as pd
 import io
+from contextlib import asynccontextmanager
 
 from database import engine, Base, get_db, SessionLocal
 import models, schemas, crud, security
-
-app = FastAPI(
-    title="Système de Gestion des Investisseurs ACP",
-    description="API pour le suivi stratégique des investissements",
-    version="1.0.0"
-)
-
-# Création des tables dans la base de données (pour le développement)
-models.Base.metadata.create_all(bind=engine)
 
 def init_db():
     """
@@ -51,10 +43,21 @@ def init_db():
     finally:
         db.close()
 
-@app.on_event("startup")
-def startup_event():
-    """Lancer l'initialisation au démarrage de l'application."""
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    """Gère le cycle de vie de l'application (Démarrage et Arrêt)."""
+    # Création des tables
+    models.Base.metadata.create_all(bind=engine)
+    # Initialisation des données
     init_db()
+    yield
+
+app = FastAPI(
+    title="Système de Gestion des Investisseurs ACP",
+    description="API pour le suivi stratégique des investissements",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # --- CONFIGURATION CORS ---
 # Configuration permissive pour le développement local.

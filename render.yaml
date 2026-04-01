@@ -1,11 +1,10 @@
-services:
-  # 1. La Base de données PostgreSQL
-  - type: pserv
-    name: acp-db
+databases:
+  - name: acp-db
     databaseName: acp_invest
     user: postgres
     plan: free # Gratuit pendant 90 jours
 
+services:
   # 2. Le Backend FastAPI
   - type: web
     name: acp-backend
@@ -22,6 +21,8 @@ services:
           type: static
           name: acp-frontend
           property: url
+      - key: PYTHON_VERSION
+        value: 3.11.9
 
   # 3. Le Frontend React (Vite)
   - type: static
