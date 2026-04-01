@@ -8,9 +8,9 @@ services:
   # 2. Le Backend FastAPI
   - type: web
     name: acp-backend
-    env: python
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -18,28 +18,23 @@ services:
           property: connectionString
       - key: FRONTEND_URL
         fromService:
-          type: static # Le frontend est un service 'static'
+          type: web
           name: acp-frontend
           property: url
-      - key: PYTHON_VERSION
-        value: 3.11.9
       - key: SECRET_KEY
         generateValue: true
     plan: free
 
   # 3. Le Frontend React (Vite)
-  - type: static
+  - type: web
     name: acp-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    publishPath: ./frontend/dist
+    env: docker
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
     envVars:
       - key: VITE_API_URL
         fromService:
           type: web
           name: acp-backend
           property: url
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    plan: free
