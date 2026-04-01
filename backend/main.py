@@ -21,13 +21,15 @@ def init_db():
     """
     db = SessionLocal()
     try:
-        admin_email = "admin@acp.tg"
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@acp.tg")
+        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+
         # Vérifier si l'admin existe déjà
         existing_admin = db.query(models.User).filter(models.User.email == admin_email).first()
         
         if not existing_admin:
             print(f"--- INITIALISATION : Création de l'admin par défaut ({admin_email}) ---")
-            hashed_password = security.get_password_hash("admin123")
+            hashed_password = security.get_password_hash(admin_password)
             admin_user = models.User(
                 email=admin_email,
                 hashed_password=hashed_password,
@@ -263,9 +265,6 @@ def export_projects_to_excel(db: Session = Depends(get_db), current_user: models
     """
     Exporte la liste complète des projets vers un fichier Excel.
     """
-    if pd is None:
-        raise HTTPException(status_code=500, detail="Pandas non configuré sur le serveur")
-    
     projects = crud.get_projects(db, limit=2000) # Exporter jusqu'à 2000 projets
 
     # Préparer les données pour l'export
@@ -338,7 +337,12 @@ def export_dashboard_stats_to_excel(year: Optional[int] = None, db: Session = De
     stats = crud.get_dashboard_stats(db, year=year)
 
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+    try:
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    except ValueError:
+        writer = pd.ExcelWriter(output, engine='openpyxl')
+
+    with writer:
         workbook = writer.book
 
         # --- Feuille 1: Statistiques Générales ---

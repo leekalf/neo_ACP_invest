@@ -247,16 +247,14 @@ def get_dashboard_stats(db: Session, year: Optional[int] = None):
     
     # Si pas encore de données historiques, on garde un fallback vide pour éviter le crash
     if not trends:
-        trends = [{
-            "month": datetime.now().strftime("%b"), 
-            "investment": 0, 
-            "sales": 0, 
-            "jobs": 0,
-            "men": 0,
-            "women": 0,
-            "national": 0,
-            "expat": 0
-        }]
+        # Générer les 3 derniers mois à 0 pour avoir un graphique lisible
+        for i in range(2, -1, -1):
+            date = datetime.now() - timedelta(days=30*i)
+            trends.append({
+                "month": date.strftime("%b"), 
+                "investment": 0, "sales": 0, "jobs": 0,
+                "men": 0, "women": 0, "national": 0, "expat": 0
+            })
 
 
     return {
