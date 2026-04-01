@@ -26,6 +26,7 @@ import ListAltIcon from '@mui/icons-material/ListAlt'; // Nouvelle icône pour l
 import { Routes, Route, Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 // Configuration de l'URL de l'API (Locale par défaut, ou URL Render)
+const CURRENT_YEAR = new Date().getFullYear();
 const START_YEAR = 2024; // L'année de lancement du système
 const AVAILABLE_YEARS = Array.from({ length: CURRENT_YEAR - START_YEAR + 1 }, (_, i) => START_YEAR + i);
 
