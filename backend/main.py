@@ -82,7 +82,8 @@ allowed_origins = [
 # Ajouter l'URL de production si définie
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    allowed_origins.append(frontend_url if frontend_url.startswith("http") else f"https://{frontend_url}")
+    url = frontend_url.rstrip("/")
+    allowed_origins.append(url if url.startswith("http") else f"https://{url}")
 
 # Autoriser dynamiquement les domaines Vercel (preview et production)
 vercel_url = os.getenv("VERCEL_URL")
