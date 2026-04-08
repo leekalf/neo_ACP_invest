@@ -29,6 +29,11 @@ def init_db():
         
         if not existing_admin:
             print(f"--- INITIALISATION : Création de l'admin par défaut ({admin_email}) ---")
+            
+            # Bcrypt a une limite de 72 octets. On s'assure de ne pas la dépasser pour éviter un crash.
+            if len(admin_password) > 72:
+                admin_password = admin_password[:72]
+                
             hashed_password = security.get_password_hash(admin_password)
             admin_user = models.User(
                 email=admin_email,
