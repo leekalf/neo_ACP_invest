@@ -54,8 +54,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     init_db()
     yield
 
+# Sur Render, le root_path peut poser problème avec les rewrites Vercel. 
+# On le rend optionnel via une variable d'environnement ou on le retire si on n'utilise pas de proxy complexe.
+ROOT_PATH = os.getenv("ROOT_PATH", "")
+
 app = FastAPI(
-    root_path="/api",
+    root_path=ROOT_PATH,
     title="Système de Gestion des Investisseurs ACP",
     description="API pour le suivi stratégique des investissements",
     version="1.0.0",
