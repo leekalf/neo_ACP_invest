@@ -92,7 +92,13 @@ app.add_middleware(
 # --- CONFIGURATION FICHIERS STATIQUES ---
 # Créer le dossier s'il n'existe pas pour éviter une erreur au démarrage
 os.makedirs("uploaded_files", exist_ok=True)
-# Monter le dossier pour rendre les fichiers accessibles via l'URL /files/
+
+# Note pour le déploiement Cloud : 
+# Sur des plateformes comme Render (gratuit) ou Vercel, les fichiers écrits localement
+# disparaissent à chaque redémarrage. Pour une production réelle, 
+# il faudra utiliser un service comme AWS S3 ou Cloudinary.
+
+# Monter le dossier pour rendre les fichiers accessibles via l'URL /api/files/
 app.mount("/files", StaticFiles(directory="uploaded_files"), name="files")
 
 @app.get("/")
