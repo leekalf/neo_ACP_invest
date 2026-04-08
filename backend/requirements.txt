@@ -9,3 +9,4 @@ pandas
 xlsxwriter
 openpyxl
 jinja2
+email-validator
